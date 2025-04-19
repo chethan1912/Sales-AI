@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales AI Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+  <div class="flex-1 overflow-y-auto p-6" id="chat-window">
+    <!-- Chat messages will go here -->
+  </div>
+
+  <div class="bg-white p-4 flex">
+    <input id="question-input" type="text" placeholder="Ask me anything..." 
+           class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring" />
+    <button onclick="sendMessage()" 
+            class="ml-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+      Send
+    </button>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("question-input");
+      const question = input.value.trim();
+      if (!question) return;
+
+      appendMessage("You", question);
+      input.value = "";
+
+      appendMessage("Sales AI", "Thinking...");
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
+        updateLastBotMessage(data.response || "Sorry, I couldn't find an answer.");
+      } catch (err) {
+        updateLastBotMessage("Oops! Something went wrong.");
+        console.error(err);
+      }
+    }
+
+    function appendMessage(sender, text) {
+      const chatWindow = document.getElementById("chat-window");
+      const msg = document.createElement("div");
+      msg.className = `mb-4 ${sender === "You" ? "text-right" : "text-left"}`;
+      msg.innerHTML = `
+        <div class="inline-block rounded-lg px-4 py-2 ${sender === "You" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"}">
+          <strong>${sender}:</strong> ${text}
+        </div>`;
+      chatWindow.appendChild(msg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function updateLastBotMessage(text) {
+      const chatWindow = document.getElementById("chat-window");
+      const lastMsg = chatWindow.querySelector("div.text-left:last-child div");
+      if (lastMsg) lastMsg.innerHTML = `<strong>Sales AI:</strong> ${text}`;
+    }
+
+    window.onload = () => {
+  appendMessage("Sales AI", "Hey learner! I'm here to help you choose the right course 🚀");
+};
+
+  </script>
+</body>
+</html>
